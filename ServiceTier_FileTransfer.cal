@@ -1,0 +1,52 @@
+OBJECT Codeunit 50000 File Transfer
+{
+  OBJECT-PROPERTIES
+  {
+    Date=01/01/01;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=RR;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      Convert@1000000000 : DotNet "'mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Convert";
+      Path@1000000001 : DotNet "'mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.Path";
+      _File@1000000006 : DotNet "'mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.File";
+      FileAccess@1000000007 : DotNet "'mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.FileAccess";
+      FileMode@1000000008 : DotNet "'mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.FileMode";
+      MemoryStream@1000000004 : DotNet "'mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.MemoryStream";
+      FileStream@1000000005 : DotNet "'mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.FileStream";
+      tempFile@1000000002 : Text[250];
+
+    PROCEDURE CustomerTop10@1000000000(VAR exitString@1000000001 : BigText);
+    VAR
+      CustomerTop10@1000000000 : Report 111;
+    BEGIN
+      tempFile := Path.GetTempPath() + Path.GetRandomFileName();
+      IF NOT CustomerTop10.SAVEASPDF(tempFile) THEN ERROR('Could not save file %1',tempFile);
+      FileMode := 4;
+      FileAccess := 1;
+      FileStream := _File.Open(tempFile, FileMode, FileAccess);
+      MemoryStream := MemoryStream.MemoryStream();
+      MemoryStream.SetLength(FileStream.Length);
+      FileStream.Read(MemoryStream.GetBuffer(), 0, FileStream.Length);
+      exitString.ADDTEXT(Convert.ToBase64String(MemoryStream.GetBuffer()));
+      MemoryStream.Close();
+      MemoryStream.Dispose();
+      FileStream.Close();
+      FileStream.Dispose();
+      _File.Delete(tempFile);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
